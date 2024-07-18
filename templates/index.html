@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Location</title>
+    <script>
+        function fetchLocation() {
+            fetch('/get_location')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('location').innerText = 
+                        `Latitude: ${data.latitude}, Longitude: ${data.longitude}`;
+                });
+        }
+        setInterval(fetchLocation, 3000);  // Fetch location every 3 seconds
+    </script>
+</head>
+<body>
+    <h1>Live Location of the Client</h1>
+    <p id="location">Fetching location...</p>
+</body>
+</html>

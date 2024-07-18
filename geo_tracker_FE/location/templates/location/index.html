@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Location</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; }
+    </style>
+    <script>
+        let map, markers = [];
+
+        function initMap() {
+            map = L.map('map').setView([0, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        function fetchLocations(deviceId = null) {
+            let url = '/get_locations/';
+            if (deviceId) {
+                url += `?device_id=${deviceId}`;
+            }
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    markers.forEach(marker => map.removeLayer(marker));
+                    markers = [];
+                    data.forEach(loc => {
+                        const latLng = [loc.latitude, loc.longitude];
+                        const marker = L.marker(latLng).addTo(map)
+                            .bindPopup(`Device ID: ${loc.device_id}<br>Timestamp: ${loc.timestamp}`)
+                            .openPopup();
+                        markers.push(marker);
+                        if (!deviceId) {
+                            map.setView(latLng, 2);
+                        } else {
+                            map.setView(latLng, 13);
+                        }
+                    });
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            initMap();
+            fetchLocations();
+
+            const deviceSelect = document.getElementById('device-select');
+            deviceSelect.addEventListener('change', (event) => {
+                const deviceId = event.target.value;
+                fetchLocations(deviceId);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Live Location of the Clients</h1>
+    <label for="device-select">Select Device:</label>
+    <select id="device-select">
+        <option value="">All Devices</option>
+        {% for device in devices %}
+            <option value="{{ device }}">{{ device }}</option>
+        {% endfor %}
+    </select>
+    <div id="map"></div>
+</body>
+</html>
